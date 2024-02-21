@@ -10,7 +10,7 @@ import time
 MAX_THREADS = 4
 
 def getInfoEveryFiveMinutes():
-    print('')
+    print('Test')
 
 
 def timer_thread():
