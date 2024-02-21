@@ -1,7 +1,7 @@
 import pymongo
 import pandas as pd
 import matplotlib.pyplot as plt
-from MongoDBFunctions import *
+from App.MongoDBFunctions import *
 import configparser
 
 # MongoDB connection parameters

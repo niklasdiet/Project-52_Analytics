@@ -5,9 +5,7 @@ FROM python:3.9
 WORKDIR /app
 
 # Install any dependencies specified in requirements.txt
-RUN apt-get update && \
-    apt-get install -y libavformat-dev libavcodec-dev libavdevice-dev \
-    libavutil-dev libavfilter-dev libswscale-dev libswresample-dev libcap-dev
+RUN apt-get update
 
 # Upgrade pip and setuptools
 RUN pip install --upgrade pip setuptools
@@ -20,7 +18,7 @@ RUN useradd -m -r -s /bin/bash project52
 USER project52
 
 # Copy the rest of the application code into the container
-COPY /RaspberryPi /app
+COPY ..  /app
 
 # Display system architecture
 RUN uname -m

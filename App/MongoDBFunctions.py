@@ -1,6 +1,6 @@
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 from gridfs import GridFS
 
@@ -94,3 +94,21 @@ def download_image_from_mongodb(client, file_id, db_name, collection_name, outpu
     
     print(f"Image downloaded from MongoDB and saved to: {output_path}")
 
+
+
+def get_data_last_24_hours(client, db_name, collection_name):
+    # Set up your MongoDB connection
+    db = client[db_name]
+    collection = db[collection_name]
+
+    # Calculate the timestamp for 24 hours ago
+    twenty_four_hours_ago = datetime.now() - timedelta(hours=24)
+
+    # Query the database to retrieve data created or modified in the last 24 hours
+    query = {"timestamp": {"$gte": twenty_four_hours_ago}}
+    
+    # Execute the query and fetch the results
+    result = list(collection.find(query))
+
+    # Process and return the result as needed
+    return result
