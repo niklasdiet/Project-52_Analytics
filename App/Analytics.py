@@ -1,7 +1,7 @@
 import pymongo
 import pandas as pd
 import matplotlib.pyplot as plt
-from App.MongoDBFunctions import *
+from MongoDBFunctions import *
 import configparser
 
 # MongoDB connection parameters
@@ -10,7 +10,6 @@ mongo_collection = 'sensorData'
 
 config = configparser.ConfigParser()
 config.read('Keys.cfg')
-cfgW = config['WEATHER']
 cfgM = config['MONGODB']
 
 
