@@ -28,7 +28,7 @@ df['timestamp'] = pd.to_datetime(df['timestamp'], unit='s')
 
 # Define devices and colors
 devices = ['hub0001', 'pico00001', 'pico00002', 'pico00003']
-colors = ['blue', 'orange', 'green']
+colors = ['black', 'blue', 'orange', 'green']
 
 # Define sensor readings
 sensor_readings = ['pressure', 'temperature', 'humidity', 'gas', 'moisture', 'moisture_raw']
@@ -40,7 +40,12 @@ for i, reading in enumerate(sensor_readings):
     plt.subplot(2, 3, i + 1)
     for j, device in enumerate(devices):
         device_df = df[df['device_id'] == device]
-        plt.plot(device_df['timestamp'], device_df[reading], label=f'{device} - {reading.capitalize()}', color=colors[j])
+
+        # Check if the DataFrame is not empty before plotting
+        if not device_df.empty:
+            plt.plot(device_df['timestamp'], device_df[reading], label=f'{device} - {reading.capitalize()}', color=colors[j])
+        else:
+            print(f"No data available for {device} - {reading.capitalize()}")
 
     plt.xlabel('Timestamp')
     plt.ylabel(reading.capitalize())
