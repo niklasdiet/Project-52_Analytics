@@ -30,9 +30,30 @@ if __name__ == "__main__":
     # get keys
     config = configparser.ConfigParser()
     config.read('Keys.cfg')
-    cfgW = config['WEATHER']
     cfgM = config['MONGODB']
-    cfgP = config['PV']
+    client = connectToDB(cfgM['username'], cfgM['password'])
+    #get_data_last_hour(client, "Project52", "sensorData")
 
-    threading.Thread(target=timer_thread).start()
-    
+    #threading.Thread(target=timer_thread).start()
+    from bson import ObjectId
+    from datetime import datetime
+
+    # Connect to MongoDB
+    db = client["Project52"]
+    collection = db["sensorData"]
+
+    threshold_timestamp = 1700000000
+
+    # Iterate through every document in the collection
+    for document in collection.find({"timestamp": {"$lt": threshold_timestamp}}):
+        # Get the ObjectId from the document
+        object_id = document["_id"]
+
+        # Extract the timestamp from the ObjectId
+        timestamp = ObjectId(object_id).generation_time.timestamp()
+
+        # Update the "timestamp" field in the document
+        collection.update_one({"_id": object_id}, {"$set": {"timestamp": timestamp}})
+
+
+    print("Timestamps updated successfully.")

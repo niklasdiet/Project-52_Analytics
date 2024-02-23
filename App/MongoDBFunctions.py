@@ -1,29 +1,12 @@
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
+from pymongo import DESCENDING
 from datetime import datetime, timedelta
-import os
 from gridfs import GridFS
+import pandas as pd
+import pymongo
 
-
-def round_to_5_minutes(dt):
-    # Round the minutes to the nearest 5
-    rounded_minutes = (dt.minute // 5) * 5
-    # Set seconds to 0
-    dt = dt.replace(minute=rounded_minutes, second=0, microsecond=0)
-    return dt
-
-
-
-def uploadData(device, client, dbName, collection_name, d1, d2 = {}, d3 = {}):
-    # Get the current time
-    current_time = datetime.now()
-
-    # Round to the nearest 5 minutes
-    rounded_time = round_to_5_minutes(current_time)
-
-    d4 = {"device": device, "time": rounded_time}
-    data = d1 | d2 | d3 | d4
-    
+def uploadData(client, dbName, collection_name, data):
     db = client[dbName]
 
     # Get the reference to the collection and upload the data
@@ -31,7 +14,6 @@ def uploadData(device, client, dbName, collection_name, d1, d2 = {}, d3 = {}):
     id = collection_ref.insert_one(data)
     print(f"Data uploaded with id: {id}")
     return id
-
 
 
 def connectToDB(username, password):
@@ -47,36 +29,6 @@ def connectToDB(username, password):
     except Exception as e:
         print(e)
 
-
-def upload_image_to_mongodb(client, image_path, db_name, collection_name, device_info):
-    current_time = datetime.now()
-
-    # Round to the nearest 5 minutes
-    rounded_time = round_to_5_minutes(current_time)
-
-    # Connect to the specified database
-    db = client[db_name]
-    
-    # Initialize GridFS
-    fs = GridFS(db, collection=collection_name)
-    
-    # Open the image file
-    with open(image_path, 'rb') as image_file:
-        # Create a document with additional metadata
-        metadata = {
-            'timestamp': rounded_time,
-            'device_info': device_info
-        }
-        
-        # Store the image and metadata in GridFS
-        file_id = fs.put(image_file, filename=image_path, metadata=metadata)
-    
-
-    
-    print(f"Image uploaded to MongoDB with file ID: {file_id}")
-    os.remove(image_path)
-
-    #return file_id
 
 def download_image_from_mongodb(client, file_id, db_name, collection_name, output_path):
     # Connect to the specified database
@@ -95,7 +47,6 @@ def download_image_from_mongodb(client, file_id, db_name, collection_name, outpu
     print(f"Image downloaded from MongoDB and saved to: {output_path}")
 
 
-
 def get_data_last_24_hours(client, db_name, collection_name):
     # Set up your MongoDB connection
     db = client[db_name]
@@ -112,3 +63,43 @@ def get_data_last_24_hours(client, db_name, collection_name):
 
     # Process and return the result as needed
     return result
+
+
+def get_latest_timestamp(client, analyze_db_name, clean_data_collection):
+    analyze_db = client[analyze_db_name]
+    clean_data_col = analyze_db[clean_data_collection]
+    
+    # Find the document with the latest timestamp
+    latest_data = clean_data_col.find_one(sort=[("timestamp", DESCENDING)])
+    
+    if latest_data:
+        return latest_data["timestamp"]
+    else:
+        # If no data is found, return a default timestamp (you may adjust this based on your requirements)
+        return datetime(2000, 1, 1)
+
+
+def round_timestamp_to_whole_number(timestamp):
+    return int(timestamp.timestamp())
+
+def get_data_last_hour(client, db_name, collection_name):
+    db = client[db_name]
+    collection = db[collection_name]
+
+    one_hour_ago = datetime.utcnow() - timedelta(hours=1)
+
+
+    # Round the timestamp to remove the decimal part
+    rounded_timestamp = round_timestamp_to_whole_number(one_hour_ago)
+    data = list(collection.find().sort([("timestamp", pymongo.ASCENDING)]))
+
+    # Convert data to pandas DataFrame
+    df = pd.DataFrame(data)
+    # Query for documents with timestamps greater than or equal to the rounded timestamp
+    cursor = collection.find({"timestamp": {"$gte": rounded_timestamp}})
+
+    # Convert cursor data to Pandas DataFrame
+    #df = pd.DataFrame(list(cursor))
+
+    # Print or process the DataFrame as needed
+    print(df)

@@ -3,36 +3,31 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from MongoDBFunctions import *
 import configparser
+from datetime import datetime, timedelta
 
 # MongoDB connection parameters
 mongo_collection = 'sensorData'
-
 
 config = configparser.ConfigParser()
 config.read('Keys.cfg')
 cfgM = config['MONGODB']
 
-
-    
 client = connectToDB(cfgM['username'], cfgM['password'])
 db = client[cfgM['database_name']]
 collection = db[mongo_collection]
 
-
-# Get most recent image
-#download_image_from_mongodb(client, "", db, "", "images/image.jpg")
-
-# Fetch data from MongoDB
-data = list(collection.find().sort([("timestamp", pymongo.ASCENDING)]))
+# Get data with timestamp greater than 1700000000
+query = {"timestamp": {"$gt": 1700000000}}
+data = list(collection.find(query).sort([("timestamp", pymongo.ASCENDING)]))
 
 # Convert data to pandas DataFrame
 df = pd.DataFrame(data)
 
 # Convert timestamp to datetime format
-df['timestamp'] = pd.to_datetime(df['timestamp'])
+df['timestamp'] = pd.to_datetime(df['timestamp'], unit='s')
 
 # Define devices and colors
-devices = ['pico00001', 'pico00002', 'pico00003']
+devices = ['hub0001', 'pico00001', 'pico00002', 'pico00003']
 colors = ['blue', 'orange', 'green']
 
 # Define sensor readings
