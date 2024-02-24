@@ -7,13 +7,17 @@ import pandas as pd
 import pymongo
 
 def uploadData(client, dbName, collection_name, data):
-    db = client[dbName]
-
     # Get the reference to the collection and upload the data
-    collection_ref = db[collection_name]
+    collection_ref = getCollection(client, dbName, collection_name)
     id = collection_ref.insert_one(data)
     print(f"Data uploaded with id: {id}")
     return id
+
+
+def getCollection(client, dbName, collection_name):
+    db = client[dbName]
+    collection = db[collection_name]
+    return collection
 
 
 def connectToDB(username, password):

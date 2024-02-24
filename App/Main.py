@@ -36,13 +36,12 @@ if __name__ == "__main__":
 
     #threading.Thread(target=timer_thread).start()
     from bson import ObjectId
-    from datetime import datetime
 
     # Connect to MongoDB
     db = client["Project52"]
     collection = db["sensorData"]
 
-    threshold_timestamp = 1700000000
+    threshold_timestamp = 1694107514000
 
     # Iterate through every document in the collection
     for document in collection.find({"timestamp": {"$lt": threshold_timestamp}}):
@@ -51,9 +50,17 @@ if __name__ == "__main__":
 
         # Extract the timestamp from the ObjectId
         timestamp = ObjectId(object_id).generation_time.timestamp()
+        ts_new = int(timestamp)
+        if int(timestamp) <= 1800000000:
+            ts_new = timestamp * 1000
+            print(ts_new)
+            collection.update_one({"_id": object_id}, {"$set": {"timestamp": ts_new}})
+
+
+
 
         # Update the "timestamp" field in the document
-        collection.update_one({"_id": object_id}, {"$set": {"timestamp": timestamp}})
 
 
     print("Timestamps updated successfully.")
+
