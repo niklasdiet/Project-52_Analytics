@@ -6,23 +6,41 @@ import time
 MAX_THREADS = 4
 
 def getInfoEveryFiveMinutes():
-    print('Test')
+    from bson import ObjectId
+    print("Start")
+    collection = getCollection(client, cfgM['database_name'], "sensorData")
+
+    threshold_timestamp = 1704107514000
+
+    # Iterate through every document in the collection
+    for document in collection.find({"timestamp": {"$lt": threshold_timestamp}}):
+
+        # Get the ObjectId from the document
+        object_id = document["_id"]
+
+        # Extract the timestamp from the ObjectId
+        timestamp = ObjectId(object_id).generation_time.timestamp()
+        ts_new = int(timestamp)
+        if int(timestamp) <= 2000000000:
+            ts_new = timestamp * 1000
+        print(ts_new)
+        collection.update_one({"_id": object_id}, {"$set": {"timestamp": ts_new}})
+
+
+    print("Timestamps updated successfully.")
+
 
 
 def timer_thread():
     print("Starting Threads...")
     thread_number = 1
     while True:
+        print(threading.active_count() - 1)
         if threading.active_count() - 1 < MAX_THREADS:  # Subtract 1 to exclude the timer thread
-            current_time = time.localtime()
-            current_minutes = current_time.tm_min
+            threading.Thread(target=getInfoEveryFiveMinutes).start()
+            thread_number += 1
 
-            # Check if the current minutes is at the end of 5 or 0
-            if current_minutes % 5 == 0:
-                threading.Thread(target=getInfoEveryFiveMinutes).start()
-                thread_number += 1
-
-        time.sleep(60)  # Check every minute
+        time.sleep(10000)  # Check every minute
 
 
 if __name__ == "__main__":
@@ -33,34 +51,16 @@ if __name__ == "__main__":
     cfgM = config['MONGODB']
     client = connectToDB(cfgM['username'], cfgM['password'])
     #get_data_last_hour(client, "Project52", "sensorData")
-
-    #threading.Thread(target=timer_thread).start()
-    from bson import ObjectId
-
-    # Connect to MongoDB
-    db = client["Project52"]
-    collection = db["sensorData"]
-
-    threshold_timestamp = 1694107514000
-
-    # Iterate through every document in the collection
-    for document in collection.find({"timestamp": {"$lt": threshold_timestamp}}):
-        # Get the ObjectId from the document
-        object_id = document["_id"]
-
-        # Extract the timestamp from the ObjectId
-        timestamp = ObjectId(object_id).generation_time.timestamp()
-        ts_new = int(timestamp)
-        if int(timestamp) <= 1800000000:
-            ts_new = timestamp * 1000
-            print(ts_new)
-            collection.update_one({"_id": object_id}, {"$set": {"timestamp": ts_new}})
+    #getInfoEveryFiveMinutes()
+    threading.Thread(target=timer_thread).start()
 
 
 
 
-        # Update the "timestamp" field in the document
 
+# prepare data 
 
-    print("Timestamps updated successfully.")
-
+# reduze data points and move it over to other db
+    
+# get further info 
+    

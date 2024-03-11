@@ -8,7 +8,7 @@ import time
 
 def getTimeframe(collection, start, end = (time.time()*1000)):
     query = {"timestamp": {"$gte": start, "$lte": end}}
-    data = list(collection.find(query).sort([("timestamp", ASCENDING)]))
+    data = list(collection.find(query).sort([("timestamp", ASCENDING)]).allow_disk_use(True))
     df = pd.DataFrame(data)
     df['timestamp'] = pd.to_datetime(df['timestamp']/1000, unit='s')
     return df
@@ -21,7 +21,7 @@ def mainPlotter(devices, sensor_readings, df):
     plt.figure(figsize=(8, 8))
 
     for i, reading in enumerate(sensor_readings):
-        plt.subplot(2, 3, i + 1)
+        plt.subplot(2, 2, i + 1)
         for j, device in enumerate(devices):
             device_df = df[df['device_id'] == device]
 
@@ -54,6 +54,8 @@ collection2 = getCollection(client, cfgMA['database_name'], 'sensorData')
 devices = ['hub0001', 'pico00001', 'pico00002', 'pico00003']
 
 # Define sensor readings
-sensor_readings = ['pressure', 'temperature', 'humidity', 'gas', 'moisture', 'moisture_raw']
-data = getTimeframe(collection1, 1701542714000)
+sensor_readings = ['pressure', 'temperature', 'humidity', 'moisture']
+data = getTimeframe(collection1, 1708453690000)#1701542714000)
 mainPlotter(devices, sensor_readings, data)
+
+
